@@ -16,17 +16,17 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
   if (x < width && y < height && z < height+width-1) {
     for (int batch = 0; batch < num; ++batch) {
       for (int plane = 0; plane < chn; ++plane) {
-        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定到某个像素点的某个通道
+        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定到某个像素点的第plane个通道
         
         if (z < width) {
           int i = z;
-          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 锁定某个像素点水平方向像素点的某个通道，和_t通道位置对应
+          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 锁定到某个像素点水平方向像素点的第plane个通道
           weight[(batch * len + i) * sp + y*width + x] += _t*_f; # weight尺寸为（c,h+w-1, h, w）
         } else {
           int i = z - width;
           int j = i<y ? i : i+1;
 
-          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 依次遍历某个像素点竖直方向像素点的每个通道，和_t通道位置对应
+          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 依次遍历某个像素点竖直方向像素点的每个通道
           weight[(batch * len + width + i) * sp + y*width + x] += _t*_f;
         }
       }
@@ -46,8 +46,8 @@ __global__ void ca_backward_kernel_t(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
         
         for (int i = 0; i < width; ++i) {
-          float _dw = dw[(batch * len + i) * sp + y*width + x];
-          float _f = f[(batch * chn + plane) * sp + y*width + i];
+          float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵某个位置每个通道的值，在每个位置遍历（h+w-1）次
+          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
           dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f;
         }
         for (int i = 0; i < height; ++i)  {
@@ -77,7 +77,7 @@ __global__ void ca_backward_kernel_f(const float *dw, const float *t, const floa
       
       for (int i = 0; i < width; ++i) {
         float _dw = dw[(batch * len + x) * sp + y*width + i];
-        float _t = t[(batch * chn + plane) * sp + y*width + i];
+        float _t = t[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
         df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
       }
       for (int i = 0; i < height; ++i) {
