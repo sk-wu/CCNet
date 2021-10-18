@@ -76,7 +76,7 @@ __global__ void ca_backward_kernel_f(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
       
       for (int i = 0; i < width; ++i) {
-        float _dw = dw[(batch * len + x) * sp + y*width + i];
+        float _dw = dw[(batch * len + x) * sp + y*width + i]; # 找出某个位置x通道上水平方向的值水平和垂直方向的（h+w-1）个点
         float _t = t[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
         df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
       }
