@@ -18,7 +18,6 @@ if (x < width && y < height && z < height + width - 1) {
 			else {
 				int i = z - width;
 				int j = i < y ? i : i + 1;
-
 				float _f = f[(batch * chn + plane) * sp + j * width + x];
 				weight[(batch * len + width + i) * sp + y * width + x] += _t * _f;
 			}
