@@ -20,13 +20,13 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
         
         if (z < width) {
           int i = z;
-          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 依次遍历某个像素点水平方向像素点的每个通道
+          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 锁定某个像素点水平方向像素点的某个通道，和_t通道位置对应
           weight[(batch * len + i) * sp + y*width + x] += _t*_f; # weight尺寸为（c,h+w-1, h, w）
         } else {
           int i = z - width;
           int j = i<y ? i : i+1;
 
-          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 依次遍历某个像素点竖直方向像素点的每个通道
+          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 依次遍历某个像素点竖直方向像素点的每个通道，和_t通道位置对应
           weight[(batch * len + width + i) * sp + y*width + x] += _t*_f;
         }
       }
