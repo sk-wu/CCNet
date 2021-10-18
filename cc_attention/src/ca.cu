@@ -16,17 +16,17 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
   if (x < width && y < height && z < height+width-1) {
     for (int batch = 0; batch < num; ++batch) {
       for (int plane = 0; plane < chn; ++plane) {
-        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定到（x,y）点的第plane个通道
+        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定（x,y）点的第plane个通道
         
         if (z < width) {
           int i = z;
-          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 锁定到(x, y)点水平方向第i个点的第plane个通道
+          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 锁定(x, y)点水平方向第i个点的第plane个通道
           weight[(batch * len + i) * sp + y*width + x] += _t*_f; # weight尺寸为（c,h+w-1, h, w）
         } else {
           int i = z - width;
           int j = i<y ? i : i+1;
 
-          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 锁定到某个像素点竖直方向像素点的第plane个通道
+          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 锁定(x, y)点竖直方向第j个点的第plane个通道
           weight[(batch * len + width + i) * sp + y*width + x] += _t*_f;
         }
       }
@@ -46,17 +46,17 @@ __global__ void ca_backward_kernel_t(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
         
         for (int i = 0; i < width; ++i) {
-          float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵某个位置第i个通道的值，在每个位置遍历（h+w-1）次
-          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
-          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; 
-        } # 以上过程相当于将t矩阵通道方向上的C个值和f矩阵中水平竖直方向上每个点通道方向上的C个点相乘
+          float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵(x,y)点的第i个通道的值（表示(x,y)点和第i个点的关联），(x,y)点共有(h+w-1)个通道,这里先算w个
+          float _f = f[(batch * chn + plane) * sp + y*width + i]; # 点(x,y)关联的第i个点在通道z上的值,i为水平方向的点
+          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; # 将关联还原到每个通道上
+        } 
         for (int i = 0; i < height; ++i)  {
           if (i == y) continue;
           int j = i<y ? i : i-1;
 
-          float _dw = dw[(batch * len + width + j) * sp + y*width + x];
-          float _f = f[(batch * chn + plane) * sp + i*width + x];
-          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f;
+          float _dw = dw[(batch * len + width + j) * sp + y*width + x]; # 权重矩阵(x,y)点的第(width+j)个通道上的值（表示(x,y)点和第j个点的关联），(x,y)点共有(h+w-1)个通道，这里算h个
+          float _f = f[(batch * chn + plane) * sp + i*width + x]; # 点(x,y)关联的第i个点在通道z上的值,i为垂直方向的点
+          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; # 将关联还原到每个通道上
         }
     }
 
