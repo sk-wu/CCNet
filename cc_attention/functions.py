@@ -35,8 +35,8 @@ class CrissCrossAttention(nn.Module):
         proj_value = self.value_conv(x)
         proj_value_H = proj_value.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height) # (B*W,C,H)
         proj_value_W = proj_value.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width) # (B*H,C,W)
-        energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width)).view(m_batchsize,width,height,height).permute(0,2,1,3) #(B,H,W,H)
-        energy_W = torch.bmm(proj_query_W, proj_key_W).view(m_batchsize,height,width,width) # (B,H,W,W)
+        energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width)).view(m_batchsize,width,height,height).permute(0,2,1,3) #(B,H,W,H) 相当于计算了所在列与其它列的关联
+        energy_W = torch.bmm(proj_query_W, proj_key_W).view(m_batchsize,height,width,width) # (B,H,W,W) 相当于计算了所在行与其它行的关联
         concate = self.softmax(torch.cat([energy_H, energy_W], 3)) # (B,H,W,H+W)
 
         att_H = concate[:,:,:,0:height].permute(0,2,1,3).contiguous().view(m_batchsize*width,height,height) # (B*W,H,H)
