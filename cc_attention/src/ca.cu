@@ -15,8 +15,8 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
 
   if (x < width && y < height && z < height+width-1) {
     for (int batch = 0; batch < num; ++batch) {
-      for (int plane = 0; plane < chn; ++plane) {
-        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定（x,y）点的第plane个通道
+      for (int plane = 0; plane < chn; ++plane) { # 遍历通道
+        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定(x, y)点的第plane个通道
         
         if (z < width) {
           int i = z;
@@ -48,7 +48,7 @@ __global__ void ca_backward_kernel_t(const float *dw, const float *t, const floa
         for (int i = 0; i < width; ++i) {
           float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵(x,y)点的第i个通道的值（表示(x,y)点和第i个点的关联），(x,y)点共有(h+w-1)个通道,这里先算w个
           float _f = f[(batch * chn + plane) * sp + y*width + i]; # 点(x,y)关联的第i个点在通道z上的值,i为水平方向的点
-          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; # 将关联还原到每个通道上
+          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; # 将关联还原到每个通道上（就是在通道z上根据关联加权(h+w-1)个点，作为dt中(x,y,z)这一点的替代）
         } 
         for (int i = 0; i < height; ++i)  {
           if (i == y) continue;
@@ -76,8 +76,8 @@ __global__ void ca_backward_kernel_f(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
       
       for (int i = 0; i < width; ++i) {
-        float _dw = dw[(batch * len + x) * sp + y*width + i]; # 找出某个位置x通道上水平和垂直方向的（h+w-1）个点
-        float _t = t[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
+        float _dw = dw[(batch * len + x) * sp + y*width + i]; # 权重矩阵(x,y)点所在行的第i个点
+        float _t = t[(batch * chn + plane) * sp + y*width + i]; # 点(x,y)关联的第i个点在通道z上的值,i为水平方向的点
         df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
       }
       for (int i = 0; i < height; ++i) {
@@ -85,7 +85,7 @@ __global__ void ca_backward_kernel_f(const float *dw, const float *t, const floa
         int j = i>y ? y : y-1;
 
         float _dw = dw[(batch * len + width + j) * sp + i*width + x];
-        float _t = t[(batch * chn + plane) * sp + i*width + x];
+        float _t = t[(batch * chn + plane) * sp + i*width + x]; # 点(x,y)关联的第i个点在通道z上的值,i为垂直方向的点
         df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
       }
     }
