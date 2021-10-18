@@ -16,8 +16,8 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
   if (x < width && y < height && z < height+width-1) {
     for (int batch = 0; batch < num; ++batch) {
       for (int plane = 0; plane < chn; ++plane) {
-        float _t = t[(batch * chn + plane) * sp + y*width + x];
-
+        float _t = t[(batch * chn + plane) * sp + y*width + x]; # 锁定到某个像素点的某个通道
+        # 依次遍历某个像素点十字交叉方向像素点的每个通道
         if (z < width) {
           int i = z;
           float _f = f[(batch * chn + plane) * sp + y*width + i];
