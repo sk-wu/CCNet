@@ -26,7 +26,7 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
           int i = z - width;
           int j = i<y ? i : i+1;
 
-          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 依次遍历某个像素点竖直方向像素点的每个通道
+          float _f = f[(batch * chn + plane) * sp + j*width + x]; # 锁定到某个像素点竖直方向像素点的第plane个通道
           weight[(batch * len + width + i) * sp + y*width + x] += _t*_f;
         }
       }
