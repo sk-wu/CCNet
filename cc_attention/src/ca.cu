@@ -46,10 +46,10 @@ __global__ void ca_backward_kernel_t(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
         
         for (int i = 0; i < width; ++i) {
-          float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵某个位置每个通道的值，在每个位置遍历（h+w-1）次
+          float _dw = dw[(batch * len + i) * sp + y*width + x]; # 权重矩阵某个位置第i个通道的值，在每个位置遍历（h+w-1）次
           float _f = f[(batch * chn + plane) * sp + y*width + i]; # 找出第plane个通道水平和垂直方向的（h+w-1）个点，将梯度反向传递回去
-          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f;
-        }
+          dt[(batch * chn + plane) * sp + y*width + x] += _dw * _f; 
+        } # 以上过程相当于将t矩阵通道方向上的C个值和f矩阵中水平竖直方向上每个点通道方向上的C个点相乘
         for (int i = 0; i < height; ++i)  {
           if (i == y) continue;
           int j = i<y ? i : i-1;
