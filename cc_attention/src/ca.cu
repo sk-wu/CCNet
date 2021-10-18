@@ -76,16 +76,16 @@ __global__ void ca_backward_kernel_f(const float *dw, const float *t, const floa
     for (int batch = 0; batch < num; ++batch) {
       
       for (int i = 0; i < width; ++i) {
-        float _dw = dw[(batch * len + x) * sp + y*width + i]; # 权重矩阵(x,y)点所在行的第i个点
-        float _t = t[(batch * chn + plane) * sp + y*width + i]; # 点(x,y)关联的第i个点在通道z上的值,i为水平方向的点
-        df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
+        float _dw = dw[(batch * len + x) * sp + y*width + i]; # 权重矩阵(x,y)点所在行的每个点i在通道x上的值
+        float _t = t[(batch * chn + plane) * sp + y*width + i]; # t矩阵(x,y)点所在行的每个点i在当前通道上的值
+        df[(batch * chn + plane) * sp + y*width + x] += _dw * _t; # 将行与行的关联和还原到每个位置
       }
       for (int i = 0; i < height; ++i) {
         if (i == y) continue;
         int j = i>y ? y : y-1;
 
         float _dw = dw[(batch * len + width + j) * sp + i*width + x];
-        float _t = t[(batch * chn + plane) * sp + i*width + x]; # 点(x,y)关联的第i个点在通道z上的值,i为垂直方向的点
+        float _t = t[(batch * chn + plane) * sp + i*width + x]; 
         df[(batch * chn + plane) * sp + y*width + x] += _dw * _t;
       }
     }
