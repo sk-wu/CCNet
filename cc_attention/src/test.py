@@ -9,7 +9,7 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
 		for (int plane = 0; plane < chn; ++plane) {
 			float _t = 0;
 			# 对于(x,y)点，将水平和垂直方向上(h+w-1)个点对应的通道值累加（方便计算每个点和其他所有点的关联）
-			# 原本是依次水平和垂直方向上(h+w-1)个点和其他所有的点的关联，然后累加。这里先累加再做乘法
+			# 原本是依次计算水平和垂直方向上(h+w-1)个点和其他所有的点的关联，然后累加。这里先将其他点累加再做乘法
 			for (int temp_x = 0; temp_x < width; ++temp_x) {
 				_t += t[(batch * chn + plane) * sp + y * width + temp_x];
 			}
@@ -18,7 +18,7 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
 			}
 			if (z < width) {
 				int i = z;
-				float _f = f[(batch * chn + plane) * sp + y * width + i]; #取(x,y)关联的第i个点通道上的值
+				float _f = f[(batch * chn + plane) * sp + y * width + i]; # 取(x,y)关联的第i个点通道上的值
 				weight[(batch * len + i) * sp + y * width + x] += _t * _f;
 			}
 			else {
