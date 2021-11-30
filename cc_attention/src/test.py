@@ -9,6 +9,7 @@ __global__ void ca_forward_kernel(const float *t, const float *f, float *weight,
 		for (int plane = 0; plane < chn; ++plane) {
 			float _t = 0;
 			# 对于(x,y)点，将水平和垂直方向上(h+w-1)个点对应的通道值累加（方便计算每个点和其他所有点的关联）
+			# 原本是依次水平和垂直方向上(h+w-1)个点和其他所有的点的关联，然后累加。这里先累加再做乘法
 			for (int temp_x = 0; temp_x < width; ++temp_x) {
 				_t += t[(batch * chn + plane) * sp + y * width + temp_x];
 			}
